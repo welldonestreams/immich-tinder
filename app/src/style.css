@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+/* Base styles */
+html, body, #app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Prevent pull-to-refresh on mobile */
+body {
+  overscroll-behavior-y: contain;
+}
+
+/* Custom scrollbar for dark mode */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}
+
+/* Disable text selection on swipeable elements */
+.select-none {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.viewport-fit {
+  height: 100dvh;
+  min-height: 100dvh;
+  max-height: 100dvh;
+}
+
+@supports not (height: 100dvh) {
+  .viewport-fit {
+    height: 100vh;
+    min-height: 100vh;
+    max-height: 100vh;
+  }
+}
+
+/* Safe area insets for notched devices */
+.safe-area-bottom {
+  padding-bottom: 1rem;
+}
+
+@supports (padding: env(safe-area-inset-top)) {
+  .min-h-screen {
+    min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .viewport-fit {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-area-bottom {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+}

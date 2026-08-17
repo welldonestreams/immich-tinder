@@ -1,7 +1,7 @@
 {
   "name": "immich-tinder",
   "private": true,
-  "version": "1.0.6",
+  "version": "1.0.7",
   "type": "module",
   "main": "electron/main.cjs",
   "description": "Swipe right to keep photos, swipe left to delete them -> just like a dating app, but for immich! Desktop + web. Powered by Vue 3 + TypeScript & Tailwind",

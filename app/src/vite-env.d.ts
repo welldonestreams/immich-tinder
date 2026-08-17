@@ -1,0 +1,31 @@
+/// <reference types="vite/client" />
+
+declare module '*.vue' {
+  import type { DefineComponent } from 'vue'
+  const component: DefineComponent<{}, {}, any>
+  export default component
+}
+
+interface ImportMetaEnv {
+  readonly VITE_SERVER_URL?: string
+  readonly VITE_USER_1_NAME?: string
+  readonly VITE_USER_1_API_KEY?: string
+  readonly VITE_USER_2_NAME?: string
+  readonly VITE_USER_2_API_KEY?: string
+  readonly VITE_USER_3_NAME?: string
+  readonly VITE_USER_3_API_KEY?: string
+  readonly VITE_USER_4_NAME?: string
+  readonly VITE_USER_4_API_KEY?: string
+  readonly VITE_USER_5_NAME?: string
+  readonly VITE_USER_5_API_KEY?: string
+  // Add more as needed
+  [key: string]: string | undefined
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv
+}
+// Exposed by electron/preload.cjs in the desktop build
+interface Window {
+  desktopInfo?: { isDesktop: boolean; version: string }
+}

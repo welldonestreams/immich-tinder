@@ -1,0 +1,110 @@
+name: Build desktop releases
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: app
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build renderer + package
+        run: npm run electron:build -- --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: immich-tinder-${{ matrix.os }}
+          path: |
+            app/release/*.exe
+            app/release/*.dmg
+            app/release/*.AppImage
+            app/release/*.zip
+          if-no-files-found: warn
+
+      - name: Attach to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            app/release/*.exe
+            app/release/*.dmg
+            app/release/*.AppImage
+            app/release/*.zip
+
+  # The no-install browser app: Vite build + the PowerShell loopback server.
+  # Assembled here so the release asset is reproducible instead of hand-built.
+  browser-app:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        working-directory: app
+        run: npm ci
+
+      - name: Build renderer
+        working-directory: app
+        run: npm run build
+
+      - name: Assemble the app folder
+        run: |
+          set -euo pipefail
+          # start.cmd refuses to run without web/index.html, so fail loudly here
+          # rather than shipping a zip that aborts on the user's machine.
+          test -f app/dist/index.html
+          mkdir -p pkg/web
+          cp -r app/dist/. pkg/web/
+          cp app/local/server.ps1 app/local/setup.html app/local/start.cmd pkg/
+          test -f pkg/web/index.html
+          test -f pkg/setup.html
+          # setup.html must sit beside server.ps1, NOT inside web/ — server.ps1
+          # serves it from $Root via an explicit route.
+          test ! -f pkg/web/setup.html
+
+      - name: Zip
+        working-directory: pkg
+        run: zip -r ../Immich.Tinder-windows-app.zip .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: immich-tinder-browser-app
+          path: Immich.Tinder-windows-app.zip
+
+      - name: Attach to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Immich.Tinder-windows-app.zip

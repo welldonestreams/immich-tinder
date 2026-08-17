@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Immich Tinder - Setup</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #000; color: #fff; font-family: system-ui, -apple-system, sans-serif;
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;
+  }
+  .card { width: 100%; max-width: 440px; }
+  h1 { font-size: 26px; margin-bottom: 4px; }
+  p.sub { color: #9ca3af; font-size: 14px; margin-bottom: 28px; }
+  label { display: block; font-size: 13px; color: #d1d5db; margin: 18px 0 6px; font-weight: 600; }
+  input {
+    width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid #374151;
+    background: #111827; color: #fff; font-size: 14px; outline: none;
+  }
+  input:focus { border-color: #3b82f6; }
+  .hint { margin-top: 6px; font-size: 12px; color: #6b7280; line-height: 1.5; }
+  .hint a { color: #60a5fa; }
+  .step { font-size: 12px; color: #9ca3af; margin-bottom: 18px; line-height: 1.7; }
+  .step b { color: #e5e7eb; }
+  button {
+    width: 100%; margin-top: 26px; padding: 14px; border: 0; border-radius: 10px;
+    background: #22c55e; color: #000; font-size: 16px; font-weight: 700; cursor: pointer;
+  }
+  button:hover { background: #4ade80; }
+  button:disabled { background: #374151; color: #9ca3af; cursor: wait; }
+  .status { margin-top: 14px; font-size: 13px; min-height: 18px; }
+  .ok { color: #4ade80; } .err { color: #f87171; }
+  details { margin-top: 22px; font-size: 12px; color: #6b7280; }
+  details summary { cursor: pointer; }
+  details ol { margin: 8px 0 0 18px; line-height: 1.8; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Immich Tinder — Setup</h1>
+  <p class="sub">Connect the app to your Immich photo library.</p>
+
+  <div class="step">
+    You need two things from your Immich server — both take under a minute:
+    <b>1.</b> the server address &nbsp; <b>2.</b> an API key.
+  </div>
+
+  <label for="target">Immich Server URL</label>
+  <input id="target" type="url" placeholder="https://photos.example.com" autocomplete="off" spellcheck="false" />
+  <p class="hint">
+    This is the address you use to open Immich in your browser.
+    If you don't know it, ask whoever runs the server (or find it in your
+    Immich app: <b>Settings → Server Information</b>).
+  </p>
+
+  <label for="apikey">API Key</label>
+  <input id="apikey" type="password" placeholder="your-api-key" autocomplete="off" spellcheck="false" />
+  <p class="hint">
+    Where to get it: log into your Immich server
+    (<a id="serverLink" href="https://immich.app/docs" target="_blank" rel="noopener">open it →</a>),
+    click your avatar → <b>Account Settings → API Keys → New API Key</b>.
+  </p>
+
+  <button id="save">Save &amp; open the app</button>
+  <div id="status" class="status"></div>
+
+  <details>
+    <summary>Still stuck?</summary>
+    <ol>
+      <li><b>Server URL</b> — the same web address you type to reach Immich (example: <code>https://immich.example.com</code>).</li>
+      <li><b>API key</b> — in Immich: avatar (top-right) → Account Settings → API Keys → New API Key → copy it. It looks like a long random string.</li>
+      <li>Paste both above and hit <b>Save</b>. Done — the app opens.</li>
+    </ol>
+  </details>
+</div>
+
+<script>
+  const target = document.getElementById('target')
+  const apikey = document.getElementById('apikey')
+  const save = document.getElementById('save')
+  const status = document.getElementById('status')
+  const serverLink = document.getElementById('serverLink')
+
+  // keep the "open your server" link in sync with what they type
+  target.addEventListener('input', () => {
+    const v = target.value.trim()
+    if (v) { serverLink.href = v; serverLink.textContent = 'open it →' }
+  })
+
+  async function saveConfig() {
+    const t = target.value.trim().replace(/\/+$/, '')
+    const k = apikey.value.trim()
+    if (!t || !k) {
+      status.className = 'status err'
+      status.textContent = 'Fill in both the server URL and the API key.'
+      return
+    }
+    save.disabled = true
+    status.className = 'status'
+    status.textContent = 'Testing connection…'
+    try {
+      // 1) save to the local server (it proxies + stores the key)
+      const r = await fetch('/_setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target: t, apiKey: k }),
+      })
+      if (!r.ok) throw new Error('local save failed')
+      // 2) verify the connection through the proxy
+      const pr = await fetch('/api/users/me', { headers: { 'Accept': 'application/json' } })
+      if (pr.status === 200) {
+        status.className = 'status ok'
+        status.textContent = 'Connected! Opening the app…'
+        // Pre-seed the app's saved config so it auto-logs-in through the
+        // local proxy (no CORS, no login screen). The proxy injects the real key.
+        // location.origin, not a hardcoded host: this page is served by the
+        // very server the app must talk to, so whichever spelling the user
+        // typed (127.0.0.1 or localhost) stays same-origin.
+        try {
+          localStorage.setItem('immich-swipe-config', JSON.stringify({
+            serverUrl: location.origin,
+            apiKey: 'local',
+          }))
+        } catch (e) { /* ignore */ }
+        location.href = '/'
+      } else {
+        status.className = 'status err'
+        status.textContent = 'Connected to the app, but your server rejected the key (HTTP ' + pr.status + '). Double-check the API key.'
+        save.disabled = false
+      }
+    } catch (e) {
+      status.className = 'status err'
+      status.textContent = 'Something went wrong: ' + e.message
+      save.disabled = false
+    }
+  }
+  save.addEventListener('click', saveConfig)
+  document.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveConfig() })
+</script>
+</body>
+</html>

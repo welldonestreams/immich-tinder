@@ -1,0 +1,77 @@
+{
+  "name": "immich-tinder",
+  "private": true,
+  "version": "1.0.6",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "description": "Swipe right to keep photos, swipe left to delete them -> just like a dating app, but for immich! Desktop + web. Powered by Vue 3 + TypeScript & Tailwind",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/welldonestreams/immich-tinder.git"
+  },
+  "keywords": [
+    "immich",
+    "photo",
+    "swipe",
+    "vue",
+    "electron"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview",
+    "type-check": "vue-tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "electron:build": "npm run build && electron-builder",
+    "electron:build:dir": "npm run build && electron-builder --dir"
+  },
+  "dependencies": {
+    "pinia": "^3.0.4",
+    "vue": "^3.5.25",
+    "vue-router": "^4.6.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.17",
+    "@types/node": "^24.10.1",
+    "@vitejs/plugin-vue": "^6.0.2",
+    "@vue/test-utils": "^2.4.6",
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8",
+    "jsdom": "^24.1.0",
+    "tailwindcss": "^4.1.17",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.4",
+    "vitest": "^2.1.4",
+    "vue-tsc": "^3.1.5"
+  },
+  "build": {
+    "appId": "com.welldonestreams.immich-tinder",
+    "productName": "Immich Tinder",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**",
+      "electron/**",
+      "electron/preload.cjs"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": true,
+      "deleteAppDataOnUninstall": true,
+      "include": "build/installer.nsh"
+    },
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.photography"
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "Graphics"
+    }
+  }
+}

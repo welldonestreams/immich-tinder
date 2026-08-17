@@ -1,0 +1,26 @@
+# nginx.conf — TEMPLATE (no secret).
+# Copy to nginx.conf, substitute your Immich API key, chmod 600, and keep
+# nginx.conf out of git (it is gitignored). Rotation = edit + reload.
+server {
+    listen 80;
+    server_name localhost;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    proxy_request_buffering off;
+    proxy_buffering off;
+    client_max_body_size 0;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://YOUR_IMMICH_HOST:2283;
+        proxy_http_version 1.1;
+        proxy_set_header Host $proxy_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        # key injected here; never in the client bundle
+        proxy_set_header x-api-key YOUR_IMMICH_API_KEY;
+    }
+}

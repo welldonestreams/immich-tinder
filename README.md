@@ -111,6 +111,8 @@ Note: user slots are currently wired up to `VITE_USER_5_*` in `src/vite-env.d.ts
 
 Security note: `VITE_*` variables are embedded into the compiled frontend. Production builds reject real `VITE_USER_*_API_KEY` values by default. Use the local proxy so the key stays server-side. To deliberately build a private image with embedded keys, set `ALLOW_EMBEDDED_API_KEYS=1`; anyone who can access that image or its JavaScript can recover those keys.
 
+The published Docker image uses `app/nginx.default.conf`, which serves the app without an API key and returns 503 for `/api/`. The household Compose deployment mounts a private `app/nginx.conf` at runtime with a fixed Immich upstream and server-side key. Keep that file out of Git and image layers; copy `app/nginx.conf.example` as the starting template.
+
 ### Option B: manual login (runtime)
 
 If you don’t configure `.env` users, the app asks for:

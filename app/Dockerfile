@@ -47,8 +47,9 @@ FROM nginx:alpine
 # Copy built files
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# The image is safe to publish. Private proxy credentials are mounted only at
+# runtime by the household deployment, never copied into an image layer.
+COPY nginx.default.conf /etc/nginx/conf.d/default.conf
 
 # Expose port
 EXPOSE 80

@@ -109,7 +109,7 @@ Behavior:
 
 Note: user slots are currently wired up to `VITE_USER_5_*` in `src/vite-env.d.ts`, `Dockerfile`, and `docker-compose.yml`.
 
-Security note: `VITE_*` variables are embedded into the compiled frontend. Only use `VITE_USER_*_API_KEY` for private deployments/images.
+Security note: `VITE_*` variables are embedded into the compiled frontend. Production builds reject real `VITE_USER_*_API_KEY` values by default. Use the local proxy so the key stays server-side. To deliberately build a private image with embedded keys, set `ALLOW_EMBEDDED_API_KEYS=1`; anyone who can access that image or its JavaScript can recover those keys.
 
 ### Option B: manual login (runtime)
 

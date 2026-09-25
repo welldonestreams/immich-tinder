@@ -20,6 +20,11 @@ const router = createRouter({
       name: 'select-user',
       component: () => import('@/views/UserSelectView.vue'),
     },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('@/views/NotFoundView.vue'),
+    },
   ],
 })
 
